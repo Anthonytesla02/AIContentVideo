@@ -179,7 +179,7 @@ Return a JSON array of scenes with scene_number, narration, duration_seconds, an
                     "height": 1024,
                     "num_inference_steps": 20
                 },
-                timeout=120
+                wait=60
             )
             
             output_list = list(output) if output else []
