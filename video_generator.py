@@ -8,8 +8,7 @@ import requests
 from elevenlabs import ElevenLabs
 from pydub import AudioSegment
 import replicate
-from google import genai
-from google.genai import types
+import google.generativeai as genai
 from pydantic import BaseModel
 
 
@@ -22,7 +21,7 @@ class Scene(BaseModel):
 
 class VideoGenerator:
     def __init__(self):
-        self.gemini_client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+        genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
         self.elevenlabs_client = ElevenLabs(api_key=os.environ.get("ELEVENLABS_API_KEY"))
         self.replicate_token = os.environ.get("REPLICATE_API_TOKEN")
         self.pexels_api_key = os.environ.get("PEXELS_API_KEY")
@@ -92,10 +91,10 @@ Important:
 
 Return ONLY the JSON array, nothing else."""
 
-        response = self.gemini_client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=prompt,
-            config=types.GenerateContentConfig(
+        model = genai.GenerativeModel("gemini-2.0-flash-exp")
+        response = model.generate_content(
+            prompt,
+            generation_config=genai.GenerationConfig(
                 temperature=0.7,
                 response_mime_type="application/json"
             )
@@ -147,7 +146,7 @@ Return ONLY the JSON array, nothing else."""
         
         return audio_files
     
-    def generate_image_replicate(self, prompt: str, style: str) -> Optional[str]:
+    def generate_image_replicate(self, prompt: str, style: str) -> Optional[bytes]:
         style_modifiers = {
             "cinematic": "cinematic lighting, dramatic composition, film grain, 8k, professional photography",
             "minimalist": "minimalist, clean, simple, modern, high contrast, geometric",
@@ -170,10 +169,11 @@ Return ONLY the JSON array, nothing else."""
                 }
             )
             
-            if output and len(output) > 0:
-                image_url = output[0]
+            output_list = list(output) if output else []
+            if output_list and len(output_list) > 0:
+                image_url = output_list[0]
                 
-                response = requests.get(image_url)
+                response = requests.get(str(image_url))
                 if response.status_code == 200:
                     return response.content
             
