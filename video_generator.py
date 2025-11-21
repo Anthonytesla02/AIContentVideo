@@ -8,7 +8,7 @@ import requests
 from elevenlabs import ElevenLabs
 from pydub import AudioSegment
 import replicate
-import google.generativeai as genai
+from mistralai import Mistral
 from pydantic import BaseModel
 
 
@@ -21,7 +21,7 @@ class Scene(BaseModel):
 
 class VideoGenerator:
     def __init__(self):
-        genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
+        self.mistral_client = Mistral(api_key=os.environ.get("MISTRAL_API_KEY"))
         self.elevenlabs_client = ElevenLabs(api_key=os.environ.get("ELEVENLABS_API_KEY"))
         self.replicate_token = os.environ.get("REPLICATE_API_TOKEN")
         self.pexels_api_key = os.environ.get("PEXELS_API_KEY")
@@ -58,7 +58,7 @@ class VideoGenerator:
     def generate_script(self, user_topic: str, video_orientation: str, 
                        video_length: str, style: str, progress_callback=None) -> List[Dict[str, Any]]:
         if progress_callback:
-            progress_callback("Generating script with Gemini Flash...")
+            progress_callback("Generating script with Mistral AI...")
         
         length_mapping = {
             "short_form": "30-60 seconds total",
@@ -72,16 +72,6 @@ Constraints:
 - Orientation: {video_orientation}
 - Visual Style: {style}
 
-Output Format (STRICT JSON ONLY — NO extra text, NO markdown, NO code blocks):
-[
-  {{
-    "scene_number": 1,
-    "narration": "Full narration for this scene.",
-    "duration_seconds": 7,
-    "visual_description": "Detailed image/footage prompt matching narration and style."
-  }}
-]
-
 Important:
 - For short_form: create 4-6 scenes, each 7-10 seconds
 - For long_form: create 10-20 scenes, each 6-12 seconds
@@ -89,23 +79,44 @@ Important:
 - Ensure narration flows naturally and engages the audience
 - Match the {style} aesthetic in visual descriptions
 
-Return ONLY the JSON array, nothing else."""
+Return a JSON array of scenes with scene_number, narration, duration_seconds, and visual_description."""
 
-        model = genai.GenerativeModel("gemini-2.0-flash-exp")
-        response = model.generate_content(
-            prompt,
-            generation_config=genai.GenerationConfig(
-                temperature=0.7,
-                response_mime_type="application/json"
-            )
+        response = self.mistral_client.chat.complete(
+            model="mistral-small-latest",
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+            temperature=0.7,
+            response_format={
+                "type": "json_object"
+            }
         )
         
-        script_text = response.text.strip()
+        script_text = response.choices[0].message.content.strip()
         
         script_text = script_text.replace('```json', '').replace('```', '').strip()
         
         try:
-            script = json.loads(script_text)
+            parsed_data = json.loads(script_text)
+            
+            if isinstance(parsed_data, dict):
+                if "scenes" in parsed_data:
+                    script = parsed_data["scenes"]
+                elif "script" in parsed_data:
+                    script = parsed_data["script"]
+                else:
+                    for key in parsed_data:
+                        if isinstance(parsed_data[key], list):
+                            script = parsed_data[key]
+                            break
+                    else:
+                        script = [parsed_data]
+            else:
+                script = parsed_data
+            
             if progress_callback:
                 progress_callback(f"Script generated: {len(script)} scenes")
             return script
