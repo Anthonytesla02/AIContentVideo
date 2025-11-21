@@ -30,12 +30,12 @@ class VideoAssembler:
             new_width = target_width
             new_height = int(new_width / clip_aspect)
         
-        clip = clip.resize(width=new_width, height=new_height)
+        clip = clip.resized(width=new_width, height=new_height)
         
         x_center = (new_width - target_width) / 2
         y_center = (new_height - target_height) / 2
         
-        clip = clip.crop(
+        clip = clip.cropped(
             x1=x_center,
             y1=y_center,
             x2=x_center + target_width,
