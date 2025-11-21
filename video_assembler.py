@@ -121,7 +121,6 @@ class VideoAssembler:
             fps=24,
             preset='ultrafast',
             threads=4,
-            verbose=False,
             logger=None
         )
         
