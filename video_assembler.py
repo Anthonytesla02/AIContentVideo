@@ -119,8 +119,10 @@ class VideoAssembler:
             codec='libx264',
             audio_codec='aac',
             fps=24,
-            preset='medium',
-            threads=4
+            preset='ultrafast',
+            threads=4,
+            verbose=False,
+            logger=None
         )
         
         for clip in clips:

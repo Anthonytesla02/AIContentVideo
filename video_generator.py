@@ -165,15 +165,17 @@ Return ONLY the JSON array, nothing else."""
                     "prompt": enhanced_prompt,
                     "negative_prompt": "ugly, blurry, low quality, distorted, text, watermark",
                     "width": 1024,
-                    "height": 1024
-                }
+                    "height": 1024,
+                    "num_inference_steps": 20
+                },
+                timeout=120
             )
             
             output_list = list(output) if output else []
             if output_list and len(output_list) > 0:
                 image_url = output_list[0]
                 
-                response = requests.get(str(image_url))
+                response = requests.get(str(image_url), timeout=30)
                 if response.status_code == 200:
                     return response.content
             
@@ -209,7 +211,8 @@ Return ONLY the JSON array, nothing else."""
             response = requests.get(
                 "https://api.pexels.com/v1/search",
                 headers=headers,
-                params=params
+                params=params,
+                timeout=15
             )
             
             if response.status_code == 200:
@@ -218,14 +221,15 @@ Return ONLY the JSON array, nothing else."""
                     photo = data["photos"][0]
                     image_url = photo["src"]["large2x"]
                     
-                    img_response = requests.get(image_url)
+                    img_response = requests.get(image_url, timeout=15)
                     if img_response.status_code == 200:
                         return (img_response.content, "image")
             
             video_response = requests.get(
                 "https://api.pexels.com/videos/search",
                 headers=headers,
-                params=params
+                params=params,
+                timeout=15
             )
             
             if video_response.status_code == 200:
@@ -235,7 +239,7 @@ Return ONLY the JSON array, nothing else."""
                     video_files = video.get("video_files", [])
                     if video_files:
                         video_url = video_files[0]["link"]
-                        vid_response = requests.get(video_url)
+                        vid_response = requests.get(video_url, timeout=30)
                         if vid_response.status_code == 200:
                             return (vid_response.content, "video")
             
