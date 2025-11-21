@@ -84,7 +84,7 @@ class VideoAssembler:
                     loops_needed = int(actual_duration / video_clip.duration) + 1
                     video_clip = concatenate_videoclips([video_clip] * loops_needed)
                 
-                video_clip = video_clip.subclip(0, min(actual_duration, video_clip.duration))
+                video_clip = video_clip.subclipped(0, min(actual_duration, video_clip.duration))
             else:
                 try:
                     img = Image.open(visual_path)
