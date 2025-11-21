@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import List, Dict, Any
 from moviepy import (
     ImageClip, VideoFileClip, AudioFileClip, 
-    CompositeVideoClip, concatenate_videoclips
+    CompositeVideoClip, concatenate_videoclips, CompositeAudioClip
 )
 from PIL import Image
 
@@ -100,7 +100,7 @@ class VideoAssembler:
             
             video_clip = self._apply_transition(video_clip, style, actual_duration)
             
-            video_clip = video_clip.set_audio(audio_clip)
+            video_clip = video_clip.with_audio(audio_clip)
             
             clips.append(video_clip)
         
