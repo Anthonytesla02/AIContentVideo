@@ -34,6 +34,13 @@ class VideoGenerator:
         
         self.image_cache = {}
         self._load_cache()
+        
+        self.costs = {
+            "elevenlabs_chars": 0,
+            "replicate_calls": 0,
+            "pexels_calls": 0,
+            "total_cost_usd": 0.0
+        }
     
     def _load_cache(self):
         cache_file = self.cache_dir / "image_cache.json"
@@ -116,8 +123,11 @@ Return ONLY the JSON array, nothing else."""
             if progress_callback:
                 progress_callback(f"Generating audio for scene {i+1}/{len(script)}...")
             
+            narration_text = scene["narration"]
+            self.costs["elevenlabs_chars"] += len(narration_text)
+            
             audio_generator = self.elevenlabs_client.text_to_speech.convert(
-                text=scene["narration"],
+                text=narration_text,
                 voice_id="21m00Tcm4TlvDq8ikWAM",
                 model_id="eleven_multilingual_v2",
                 output_format="mp3_44100_128"
@@ -148,6 +158,8 @@ Return ONLY the JSON array, nothing else."""
         enhanced_prompt = f"{prompt}, {style_modifiers.get(style, '')}"
         
         try:
+            self.costs["replicate_calls"] += 1
+            
             output = replicate.run(
                 "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
                 input={
@@ -273,6 +285,7 @@ Return ONLY the JSON array, nothing else."""
                 pexels_result = self.get_pexels_media(prompt, orientation, style)
                 
                 if pexels_result:
+                    self.costs["pexels_calls"] += 1
                     content, media_type = pexels_result
                     
                     if media_type == "video":
@@ -295,3 +308,13 @@ Return ONLY the JSON array, nothing else."""
             progress_callback(f"All {len(visual_files)} visuals generated")
         
         return visual_files
+    
+    def calculate_costs(self):
+        elevenlabs_cost = (self.costs["elevenlabs_chars"] / 1000) * 0.30
+        replicate_cost = self.costs["replicate_calls"] * 0.02
+        pexels_cost = 0.0
+        
+        total_cost = elevenlabs_cost + replicate_cost + pexels_cost
+        self.costs["total_cost_usd"] = round(total_cost, 4)
+        
+        return self.costs

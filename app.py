@@ -1,8 +1,10 @@
 import streamlit as st
 import os
+import json
 from pathlib import Path
 from video_generator import VideoGenerator
 from video_assembler import VideoAssembler
+from database import init_db, save_video_to_history, get_all_videos, get_video_by_id, get_total_costs
 import traceback
 
 
@@ -12,8 +14,12 @@ st.set_page_config(
     layout="wide"
 )
 
+init_db()
+
 st.title("🎬 AI Video Generator")
 st.markdown("Create professional videos from any topic using AI")
+
+page = st.sidebar.radio("Navigation", ["🎬 Create Video", "📊 History & Dashboard", "💰 Cost Tracking"])
 
 
 @st.cache_resource

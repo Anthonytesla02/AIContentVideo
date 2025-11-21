@@ -2,7 +2,7 @@ modules = ["python-3.11"]
 
 [nix]
 channel = "stable-25_05"
-packages = ["ffmpeg-full", "freetype", "imagemagickBig", "lcms2", "libimagequant", "libjpeg", "libtiff", "libwebp", "libxcrypt", "openjpeg", "tcl", "tk", "zlib", "ffmpeg"]
+packages = ["ffmpeg", "ffmpeg-full", "freetype", "imagemagickBig", "lcms2", "libimagequant", "libjpeg", "libtiff", "libwebp", "libxcrypt", "openjpeg", "tcl", "tk", "zlib"]
 
 [deployment]
 deploymentTarget = "autoscale"
@@ -40,5 +40,5 @@ localPort = 5000
 externalPort = 80
 
 [[ports]]
-localPort = 46825
+localPort = 40677
 externalPort = 3000
