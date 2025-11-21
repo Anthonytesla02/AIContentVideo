@@ -1,0 +1,168 @@
+
+1. User Input Parameters
+
+The system must accept the following inputs:
+
+user_topic (string) — main subject of the video
+
+video_orientation — choose from:
+["landscape", "portrait"]
+
+video_length — choose from:
+["short_form", "long_form"]
+
+short_form = 30–60 seconds
+
+long_form = 2–10 minutes
+
+
+style — choose from:
+["cinematic", "minimalist", "vibrant", "documentary"]
+
+
+
+---
+
+2. Phase 1 — Script Generation
+
+Model:
+Use Gemini Flash or any fast free LLM.
+
+Goal: Produce a scene-based script in a strict JSON array.
+
+Prompt to LLM:
+
+You are a professional scriptwriter. Create a narration script for a video about: "{user_topic}".
+
+Constraints:
+- Video Length: {video_length}
+- Orientation: {video_orientation}
+- Visual Style: {style}
+
+Output Format (STRICT JSON ONLY — NO extra text):
+[
+  {
+    "scene_number": 1,
+    "narration": "Full narration for this scene.",
+    "duration_seconds": 7,
+    "visual_description": "Detailed image/footage prompt matching narration and style."
+  }
+]
+
+Purpose:
+This JSON becomes the backbone for audio + visual generation.
+
+
+---
+
+3. Phase 2 — Audio Generation (ElevenLabs)
+
+Goal: Avoid rate limits via ONE API call.
+
+Procedure:
+
+1. Concatenate all scene narration into one string.
+
+
+2. Make a single ElevenLabs request to generate the full voiceover.
+
+
+3. Use pydub to split the resulting audio file into individual clips based on each scene’s duration_seconds.
+
+
+
+This reduces API usage dramatically.
+
+
+---
+
+4. Phase 3 — Visual Generation & Stock Footage Fallback
+
+Primary: AI Image Generation
+
+Use any free-tier generator such as:
+
+Replicate Stable Diffusion
+
+HuggingFace free inference models
+
+
+Rate-Limit Strategy:
+
+Generate images sequentially with a 1–2s delay between calls.
+
+Implement a prompt hashing cache:
+
+If a prompt has been generated before, reuse the stored image.
+
+
+
+Fallback: Free Stock Footage
+
+If:
+
+AI image generation fails
+
+Rate limits trigger
+
+
+Then use:
+
+Pexels
+
+Pixabay
+
+
+Search query:
+visual_description + user_topic
+
+If video style is cinematic/minimalist/etc., adjust search keywords to match tone.
+
+
+---
+
+5. Phase 4 — Video Assembly
+
+Use moviepy or ffmpeg-python.
+
+For each scene:
+
+1. If using AI images → create an ImageClip.
+
+
+2. If using stock videos → load VideoFileClip and trim to duration_seconds.
+
+
+3. Sync each clip with its corresponding audio slice.
+
+
+4. Concatenate all clips into a final timeline.
+
+
+5. Add transitions based on selected style.
+
+
+6. Render MP4 in the requested orientation.
+
+
+
+
+---
+
+6. Final Output Requirements
+
+A single rendered MP4 video that:
+
+Matches orientation (portrait/landscape)
+
+Matches style
+
+Keeps audio perfectly synced
+
+Uses fallback assets when needed
+
+Avoids hitting API limits via batching, caching, and delayed calls
+
+
+Performance Goal:
+Must be able to generate 3–5 videos in sequence without rate-limit failure.
