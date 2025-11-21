@@ -1,12 +1,10 @@
 import os
 from pathlib import Path
 from typing import List, Dict, Any
-from moviepy.editor import (
+from moviepy import (
     ImageClip, VideoFileClip, AudioFileClip, 
     CompositeVideoClip, concatenate_videoclips
 )
-from moviepy.video.fx.fadein import fadein
-from moviepy.video.fx.fadeout import fadeout
 from PIL import Image
 
 
@@ -47,19 +45,18 @@ class VideoAssembler:
         return clip
     
     def _apply_transition(self, clip, style: str, duration: float):
+        from moviepy import vfx
+        
         fade_duration = min(0.5, duration / 4)
         
         if style == "cinematic":
-            clip = fadein(clip, fade_duration)
-            clip = fadeout(clip, fade_duration)
+            clip = clip.with_effects([vfx.FadeIn(fade_duration), vfx.FadeOut(fade_duration)])
         elif style == "minimalist":
             pass
         elif style == "vibrant":
-            clip = fadein(clip, fade_duration * 0.5)
-            clip = fadeout(clip, fade_duration * 0.5)
+            clip = clip.with_effects([vfx.FadeIn(fade_duration * 0.5), vfx.FadeOut(fade_duration * 0.5)])
         elif style == "documentary":
-            clip = fadein(clip, fade_duration * 0.3)
-            clip = fadeout(clip, fade_duration * 0.3)
+            clip = clip.with_effects([vfx.FadeIn(fade_duration * 0.3), vfx.FadeOut(fade_duration * 0.3)])
         
         return clip
     
