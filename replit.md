@@ -4,8 +4,9 @@
 A modular, efficient, and cost-effective AI video generator that creates professional videos from user topics. The system generates scripts, voiceovers, visuals, and assembles complete videos with proper audio-visual synchronization.
 
 ## Recent Changes
-- **2025-11-21**: Initial implementation with all 4 phases
-  - Phase 1: Script generation with Gemini Flash
+- **2025-11-21**: Migration to Mistral AI and optimizations
+  - **Migrated from Gemini to Mistral AI** for script generation (better free tier limits)
+  - Phase 1: Script generation with Mistral AI using JSON mode
   - Phase 2: Per-scene audio generation with ElevenLabs
   - Phase 3: AI image generation (Replicate) with Pexels fallback
   - Phase 4: Video assembly with moviepy
@@ -13,6 +14,8 @@ A modular, efficient, and cost-effective AI video generator that creates profess
   - Fixed Pexels media type detection (images vs videos)
   - Implemented prompt-based caching for AI-generated images
   - Added rate-limit handling with delays between API calls
+  - Optimized video rendering with ultrafast preset
+  - Added timeouts to Replicate (60s wait) and Pexels (15-30s) API calls
 
 ## Project Architecture
 
@@ -20,7 +23,7 @@ A modular, efficient, and cost-effective AI video generator that creates profess
 
 #### video_generator.py
 Handles all content generation:
-- **Script Generation**: Uses Gemini Flash to create scene-based scripts with JSON output
+- **Script Generation**: Uses Mistral AI to create scene-based scripts with structured JSON output
 - **Audio Generation**: Per-scene ElevenLabs TTS for perfect timing alignment
 - **Visual Generation**: Replicate SDXL for AI images with Pexels fallback
 - **Caching**: MD5 hash-based prompt caching to avoid regenerating identical visuals
@@ -46,9 +49,10 @@ Streamlit web interface:
 
 **Python Libraries:**
 - `streamlit` - Web interface
-- `google-generativeai` - Gemini Flash for scripts
+- `mistralai` - Mistral AI for script generation
 - `elevenlabs` - Text-to-speech voiceovers
 - `replicate` - AI image generation
+- `groq` - Backup LLM option (installed but not currently used)
 - `pydub` - Audio processing
 - `moviepy` - Video assembly
 - `Pillow` - Image processing
@@ -58,7 +62,7 @@ Streamlit web interface:
 - `ffmpeg` - Video encoding/decoding
 
 **External APIs:**
-- Google Gemini API (free tier)
+- Mistral AI API (generous free tier with better limits)
 - ElevenLabs API (10k chars/month free)
 - Replicate API (free tier)
 - Pexels API (completely free)
@@ -94,7 +98,7 @@ Streamlit web interface:
 
 ## API Keys Required
 All API keys are stored as environment secrets:
-- `GEMINI_API_KEY` - Google Gemini Flash
+- `MISTRAL_API_KEY` - Mistral AI for script generation
 - `ELEVENLABS_API_KEY` - Voice synthesis
 - `REPLICATE_API_TOKEN` - AI image generation
 - `PEXELS_API_KEY` - Stock media fallback
